@@ -25,7 +25,7 @@ The program categorizes the chapters as war-related or peace-related by counting
 
 To run the program, follow these steps:
 
-1. Install [Python](https://www.python.org/downloads/) (version 3.6 or higher)
+1. Install [Python](https://www.python.org/downloads/) (version 3.9 or higher)
 2. Clone this repository to your local machine
 3. Navigate to the repository directory in your terminal or command prompt
 4. Run the following command: `python main.py`
