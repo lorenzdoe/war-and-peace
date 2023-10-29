@@ -1,4 +1,4 @@
-# War and Peace Categorization Program
+# War and Peace
 
 This program reads a large text file "War and Peace" by Tolstoy and two text files with word lists, one for "war-terms" and one for "peace-terms". The program categorizes the chapters of the book as war-related or peace-related based on the density of war and peace terms in each chapter.
 
@@ -35,5 +35,3 @@ Note: The program assumes that the input files are located in the `in` folder.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-
