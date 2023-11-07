@@ -11,12 +11,12 @@ class TestTransformFunctions(unittest.TestCase):
     def test_transform_chapter(self):
         # Arrange
         chapter = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven']
-        transformed_chapter = [(1, 1), (3, 1), (5, 0), (7, 0)]
+        transformed_chapter = [(1, 'A'), (3, 'A'), (5, 'B'), (7, 'B')]
         key_dict = {
-            'one': 1,
-            'three': 1,
-            'five': 0,
-            'seven': 0
+            'one': 'A',
+            'three': 'A',
+            'five': 'B',
+            'seven': 'B'
         }
 
         # Act

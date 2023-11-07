@@ -3,30 +3,31 @@ import concurrent.futures
 import time
 from itertools import islice, groupby
 from enum import Enum
-from typing import List, Tuple, Iterable, Generator
+from typing import List, Tuple, Iterable, Generator, Iterator
+from functools import partial
+
 
 ### lambda functions ###
 
-read_war = lambda: open('in/war.in', 'r').read().splitlines()
+read_keywords = lambda filename: open(filename, 'r').read().splitlines()
 
-read_peace = lambda: open('in/peace.in', 'r').read().splitlines()
+# returns list of words
+read_and_split = lambda filename: open(filename, 'r').read().split()
+read_war_and_peace = partial(read_and_split, 'in/war_and_peace.in')
 
 create_wordlist = lambda war_words, peace_words: (
     {word: WarOrPeace.WAR for word in war_words} | {word: WarOrPeace.PEACE for word in peace_words}
 )
 
-get_wordlist = lambda: create_wordlist(read_war(), read_peace())
-
-# returns list of words
-read_war_and_peace = lambda: open('in/war_and_peace.in', 'r').read().split()
+get_wordlist = lambda: create_wordlist(read_keywords('in/war.in'), read_keywords('in/peace.in'))
 
 # transform word to lowercase and remove non-alphabetic characters
 clean_word = lambda word: ''.join(c for c in word if c.isalpha()).lower()
 
-# filter transformed chapter by WarOrPeace
+# filter a transformed chapter by WarOrPeace
 filter_tchapter = lambda tchapter: lambda WoP: list(filter(lambda x: x[1] is WoP, tchapter))
 
-# calculate the overall density of filtered words in chapter
+# calculate the overall density of filtered words in chapter (percentage of filtered words in chapter)
 calc_raw_density = lambda filtered_tchap, tchap: len(filtered_tchap) / len(tchap)
 
 ### classes ###
@@ -40,13 +41,14 @@ class WarOrPeace(Enum):
 def get_chapters(war_and_peace: List[str]) -> List[List[str]]:
     is_chapter = lambda x: x == 'CHAPTER'
     # group words by chapters
-    chapters: Iterable[Generator] = (g for k, g in groupby(war_and_peace, key=is_chapter) if not k)
+    chapters: Generator[Iterator] = (grouper for key, grouper in groupby(war_and_peace, key=is_chapter) if not key)
     # TODO :: remove very last part of the last chapter
+    # 
     # transform words to lowercase and remove non-alphabetic characters
     only_words_chapters: Generator = (list(map(clean_word, chapter)) for chapter in chapters)
-    return list(islice(only_words_chapters, 1, None)) # skip first chapter using islice
+    return list(islice(only_words_chapters, 1, None)) # skip text before chapter 1 using islice
 
-# transforms a chapter to a list of tuples (word_index, PEACE or WAR)
+# transforms a chapter to a list of tuples (word_index, PEACE or WAR), not classified words are ignored
 def transform_chapter(key_dict) -> List[Tuple]:
     return lambda chapter: [(i, key_dict[word]) for i, word in enumerate(chapter) if word in key_dict]
 
