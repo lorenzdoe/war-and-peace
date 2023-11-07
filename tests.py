@@ -20,7 +20,7 @@ class TestTransformFunctions(unittest.TestCase):
         }
 
         # Act
-        transformed = transform_chapter(key_dict)(chapter)
+        transformed = list(transform_chapter(key_dict)(chapter))
 
         # Assert
         self.assertEqual(transformed, transformed_chapter)

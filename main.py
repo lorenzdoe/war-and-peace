@@ -3,9 +3,7 @@ import concurrent.futures
 import time
 from itertools import islice, groupby
 from enum import Enum
-from typing import List, Tuple, Iterable, Generator, Iterator
-from functools import partial
-
+from typing import List, Tuple, Iterable, Generator, Iterator, Dict
 
 ### lambda functions ###
 
@@ -13,7 +11,6 @@ read_keywords = lambda filename: open(filename, 'r').read().splitlines()
 
 # returns list of words
 read_and_split = lambda filename: open(filename, 'r').read().split()
-read_war_and_peace = partial(read_and_split, 'in/war_and_peace.in')
 
 create_wordlist = lambda war_words, peace_words: (
     {word: WarOrPeace.WAR for word in war_words} | {word: WarOrPeace.PEACE for word in peace_words}
@@ -24,12 +21,6 @@ get_wordlist = lambda: create_wordlist(read_keywords('in/war.in'), read_keywords
 # transform word to lowercase and remove non-alphabetic characters
 clean_word = lambda word: ''.join(c for c in word if c.isalpha()).lower()
 
-# filter a transformed chapter by WarOrPeace
-filter_tchapter = lambda tchapter: lambda WoP: list(filter(lambda x: x[1] is WoP, tchapter))
-
-# calculate the overall density of filtered words in chapter (percentage of filtered words in chapter)
-calc_raw_density = lambda filtered_tchap, tchap: len(filtered_tchap) / len(tchap)
-
 ### classes ###
 
 class WarOrPeace(Enum):
@@ -38,10 +29,10 @@ class WarOrPeace(Enum):
 
 ### functions ###
 
-def get_chapters(war_and_peace: List[str]) -> List[List[str]]:
-    is_chapter = lambda x: x == 'CHAPTER'
+def get_chapters(book: List[str], keyword: str) -> List[List[str]]:
+    is_chapter = lambda x: x == keyword
     # group words by chapters
-    chapters: Generator[Iterator] = (grouper for key, grouper in groupby(war_and_peace, key=is_chapter) if not key)
+    chapters: Generator[Iterator] = (grouper for key, grouper in groupby(book, key=is_chapter) if not key)
     # TODO :: remove very last part of the last chapter
     # 
     # transform words to lowercase and remove non-alphabetic characters
@@ -52,44 +43,31 @@ def get_chapters(war_and_peace: List[str]) -> List[List[str]]:
 def transform_chapter(key_dict) -> List[Tuple]:
     return lambda chapter: [(i, key_dict[word]) for i, word in enumerate(chapter) if word in key_dict]
 
-# takes a filtered transformed chapter and returns the average space between words
-def calc_av_space(filtered_tchap: List[Tuple]) -> float:
-    denominator = 1 if len(filtered_tchap) == 1 else len(filtered_tchap)-1
-    return sum(y[0] - x[0] for x, y in zip(filtered_tchap[:-1], filtered_tchap[1:])) / denominator
-
-# calulates the score (average space * raw_density) from transformed chapter
-def calc_score(tchap, WoP):
-    filtered_tchap = filter_tchapter(tchap)(WoP)
-    return calc_av_space(tchap) * calc_raw_density(filtered_tchap, tchap)
-
-def calc_chapter_relation(tchap):
-    war_score = calc_score(tchap, WarOrPeace.WAR)
-    peace_score = calc_score(tchap, WarOrPeace.PEACE)
-    return WarOrPeace.WAR if war_score > peace_score else WarOrPeace.PEACE
+# gets a chapter and returns a dictionary with key is either war or peace and value is a tuple of indices
+def map_chapter(key_dict: Dict[str, Enum], chapter: List[str]) -> Dict[Enum, Tuple[int]]:
+    transformed_chapter = transform_chapter(key_dict)(chapter)
+    return {
+        WarOrPeace.WAR: tuple(i for i, WoP in transformed_chapter if WoP is WarOrPeace.WAR),
+        WarOrPeace.PEACE: tuple(i for i, WoP in transformed_chapter if WoP is WarOrPeace.PEACE)
+    }
 
 if __name__ == '__main__':
-    subprocess.run(['python3', 'tests.py'], check=True)
+    #subprocess.run(['python3', 'tests.py'], check=True)
 
     wordlist: dict = get_wordlist()
-    war_and_peace: List[str] = read_war_and_peace()
-    chapters: List[List[str]] = get_chapters(war_and_peace)
+    war_and_peace: List[str] = read_and_split('in/war_and_peace.in')
+    chapters: List[List[str]] = get_chapters(book=war_and_peace,keyword='CHAPTER')
     transformed_chapters = [transform_chapter(wordlist)(chapter) for chapter in chapters]
 
-    # start_time = time.time()
+    chapter0 = transformed_chapters[0]
+    
+    mapped_chapter0 = map_chapter(wordlist, chapters[0])
 
-    # for i, tchap in enumerate(transformed_chapters):
-    #     print(f"Chapter {i+1}: {calc_chapter_relation(tchap).name}")
+    print(mapped_chapter0)
 
-    # time1 = time.time() - start_time
+    # for i, chapter in enumerate(transformed_chapters):
+    #     print(f"Chapter {i+1}: {tuple(chapter)}")
 
-    # start_time = time.time()
-
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        for i, (chap, score) in enumerate(zip(transformed_chapters, executor.map(calc_chapter_relation, transformed_chapters))):
-            print(f"Chapter {i+1}: {score.name}")
-
-    # time2 = time.time() - start_time
-
-    # print(f"Non-concurrent method took {time1} seconds.")
-    # print(f"Concurrent method took {time2} seconds.")
-
+    # with concurrent.futures.ProcessPoolExecutor() as executor:
+    #     for i, (chap, score) in enumerate(zip(transformed_chapters, executor.map(calc_chapter_relation, transformed_chapters))):
+    #         print(f"Chapter {i+1}: {score.name}")
