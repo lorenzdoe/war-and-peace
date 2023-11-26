@@ -132,7 +132,7 @@ if __name__ == '__main__':
     wordlist: dict = maybe_wordlist.value
     war_and_peace: Tuple[str] = maybe_war_and_peace.value
 
-    chapters: Tuple[List[str]] = split_into_chapters(book=war_and_peace,keyword='CHAPTER')
+    chapters: Tuple[Tuple[str]] = split_into_chapters(book=war_and_peace,keyword='CHAPTER')
 
     # map
     mapped_chapters: Dict = tuple(map_chapter_WoP(wordlist, chapter, i+1) for i, chapter in enumerate(chapters))
