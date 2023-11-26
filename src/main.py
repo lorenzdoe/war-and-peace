@@ -69,7 +69,7 @@ def transform_chapter(key_dict) -> Tuple[Tuple[int, Enum]]:
     return lambda chapter: tuple((i, key_dict[word]) for i, word in enumerate(chapter) if word in key_dict)
 
 
-def filter_transformed_chapter(transformed_chapter: Tuple[Tuple[int, Enum]], key) -> Tuple[Tuple]:
+def filter_transformed_chapter(transformed_chapter: Tuple[Tuple[int, Enum]], key) -> Tuple[int]:
     """
     filter out words that are classified as key
     """
@@ -108,7 +108,7 @@ def calc_score(indices: Tuple[int], chap_len: int) -> float:
     density_score: float = len(indices) / chap_len
     return (space_weight * space_score + density_weight * density_score ) * 100
 
-def filter_by_type(chapters: Tuple[Dict[Enum, Tuple[int]]], type) -> Tuple[Tuple[Tuple[int], int]]:
+def filter_tokenized_chapters(chapters: Tuple[Dict[Enum, Tuple[int]]], type) -> Tuple[Tuple[Tuple[int], int]]:
     """
     shuffle step from map reduce, returns a tuple of tuples, where each tuple contains tuple of indices and chapter length
     """
@@ -138,8 +138,8 @@ if __name__ == '__main__':
     mapped_chapters: Dict = tuple(map_chapter_WoP(wordlist, chapter, i+1) for i, chapter in enumerate(chapters))
 
     # "shuffle"
-    war_collection: Tuple[Tuple[Tuple[int], int]] = filter_by_type(mapped_chapters, WarOrPeace.WAR)
-    peace_collection: Tuple[Tuple[Tuple[int], int]] = filter_by_type(mapped_chapters, WarOrPeace.PEACE)
+    war_collection: Tuple[Tuple[Tuple[int], int]] = filter_tokenized_chapters(mapped_chapters, WarOrPeace.WAR)
+    peace_collection: Tuple[Tuple[Tuple[int], int]] = filter_tokenized_chapters(mapped_chapters, WarOrPeace.PEACE)
 
     # reduce
     war_scores: Tuple[float] = tuple(calc_score(indices, chap_len) for indices, chap_len in war_collection)
