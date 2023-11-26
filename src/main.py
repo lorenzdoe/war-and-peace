@@ -108,11 +108,11 @@ def calc_score(indices: Tuple[int], chap_len: int) -> float:
     density_score: float = len(indices) / chap_len
     return (space_weight * space_score + density_weight * density_score ) * 100
 
-def shuffle_chapters(chapters: Tuple[Dict[Enum, Tuple[int]]], type) -> Tuple[float]:
+def filter_by_type(chapters: Tuple[Dict[Enum, Tuple[int]]], type) -> Tuple[Tuple[Tuple[int], int]]:
     """
-    shuffle step from map reduce, returns a list of tuples with scores for that chapter
+    shuffle step from map reduce, returns a tuple of tuples, where each tuple contains tuple of indices and chapter length
     """
-    return tuple(calc_score(chapter[type], chapter['len']) for chapter in chapters)
+    return tuple((chapter[type], chapter['len']) for chapter in chapters)
 
 
 def print_results(reduced_chapters: List[Enum]) -> None:
@@ -133,16 +133,19 @@ if __name__ == '__main__':
     war_and_peace: Tuple[str] = maybe_war_and_peace.value
 
     chapters: Tuple[List[str]] = split_into_chapters(book=war_and_peace,keyword='CHAPTER')
-    transformed_chapters = tuple(transform_chapter(wordlist)(chapter) for chapter in chapters)
 
     # map
     mapped_chapters: Dict = tuple(map_chapter_WoP(wordlist, chapter, i+1) for i, chapter in enumerate(chapters))
 
     # "shuffle"
-    war_scores: Tuple[float] = shuffle_chapters(mapped_chapters, WarOrPeace.WAR)
-    peace_scores: Tuple[float] = shuffle_chapters(mapped_chapters, WarOrPeace.PEACE)
+    war_collection: Tuple[Tuple[Tuple[int], int]] = filter_by_type(mapped_chapters, WarOrPeace.WAR)
+    peace_collection: Tuple[Tuple[Tuple[int], int]] = filter_by_type(mapped_chapters, WarOrPeace.PEACE)
 
     # reduce
+    war_scores: Tuple[float] = tuple(calc_score(indices, chap_len) for indices, chap_len in war_collection)
+    peace_scores: Tuple[float] = tuple(calc_score(indices, chap_len) for indices, chap_len in peace_collection)
+
+    # final result
     reduced: Tuple[Enum] = tuple(WarOrPeace.WAR if war_score > peace_score else WarOrPeace.PEACE for war_score, peace_score in zip(war_scores, peace_scores))
     
     print_results(reduced)
