@@ -62,14 +62,14 @@ def split_into_chapters(book: List[str], keyword: str) -> Tuple[Tuple[str]]:
     return tuple(only_words_chapters)[1:]
 
 
-def transform_chapter(key_dict) -> Tuple[Tuple]:
+def transform_chapter(key_dict) -> Tuple[Tuple[int, Enum]]:
     """
     transforms a chapter to a tuple of tuples (word_index, PEACE or WAR), not classified words are ignored
     """
     return lambda chapter: tuple((i, key_dict[word]) for i, word in enumerate(chapter) if word in key_dict)
 
 
-def filter_transformed_chapter(transformed_chapter: Tuple[Tuple], key) -> Tuple[Tuple]:
+def filter_transformed_chapter(transformed_chapter: Tuple[Tuple[int, Enum]], key) -> Tuple[Tuple]:
     """
     filter out words that are classified as key
     """
