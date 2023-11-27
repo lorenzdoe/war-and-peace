@@ -5,7 +5,7 @@ from functools import partial
 
 from Monad import Maybe
 
-space_weight = 0.5
+space_weight = 0.25
 density_weight = 1
 
 def read_and_apply(filename: str, func) -> Maybe:
