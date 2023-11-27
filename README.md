@@ -36,7 +36,3 @@ Note: The program assumes that the input files are located in the `in` folder.
 ## Tests
 
 Pytest is used for testing. Run the tests by `pytest tests.py`
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
