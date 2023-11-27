@@ -1,5 +1,4 @@
 playground.py
-*.txt
 out/own_solution.out
 __pycache__
 src/.pytest_cache
