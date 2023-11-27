@@ -4,3 +4,5 @@ out/own_solution.out
 __pycache__
 src/.pytest_cache
 .pytest_cache
+.hypothesis
+src/.hypothesis
