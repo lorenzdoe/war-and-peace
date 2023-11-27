@@ -5,7 +5,7 @@ from functools import partial
 
 from Monad import Maybe
 
-space_weight = 1
+space_weight = 0.5
 density_weight = 1
 
 def read_and_apply(filename: str, func) -> Maybe:
@@ -115,10 +115,22 @@ def filter_tokenized_chapters(chapters: Tuple[Dict[Enum, Tuple[int]]], type) -> 
     return tuple((chapter[type], chapter['len']) for chapter in chapters)
 
 
+filter_war_chapters = partial(filter_tokenized_chapters, type=WarOrPeace.WAR)
+filter_peace_chapters = partial(filter_tokenized_chapters, type=WarOrPeace.PEACE)
+
+def eval_result(war_scores: Tuple[float], peace_scores: Tuple[float]) -> Tuple[Enum]:
+    """
+    reduce step from map reduce, returns a tuple of WAR or PEACE
+    """
+    return tuple(WarOrPeace.WAR if war_score > peace_score else WarOrPeace.PEACE for war_score, peace_score in zip(war_scores, peace_scores))
+
 def print_results(reduced_chapters: List[Enum]) -> None:
     for i, chapter in enumerate(reduced_chapters):
         print(f'Chapter {i+1}: {chapter.name.lower()}-related')
 
+def print_error_and_exit():
+    print('Error reading files')
+    exit(1)
 
 if __name__ == '__main__':
 
@@ -126,8 +138,7 @@ if __name__ == '__main__':
     maybe_war_and_peace: Maybe = read_and_split('in/war_and_peace.in')
 
     if maybe_wordlist.is_error or maybe_war_and_peace.is_error:
-        print('Error reading files')
-        exit(1)
+        print_error_and_exit()
 
     wordlist: dict = maybe_wordlist.value
     war_and_peace: Tuple[str] = maybe_war_and_peace.value
@@ -138,14 +149,14 @@ if __name__ == '__main__':
     mapped_chapters: Dict = tuple(map_chapter_WoP(wordlist, chapter, i+1) for i, chapter in enumerate(chapters))
 
     # "shuffle"
-    war_collection: Tuple[Tuple[Tuple[int], int]] = filter_tokenized_chapters(mapped_chapters, WarOrPeace.WAR)
-    peace_collection: Tuple[Tuple[Tuple[int], int]] = filter_tokenized_chapters(mapped_chapters, WarOrPeace.PEACE)
+    war_collection: Tuple[Tuple[Tuple[int], int]] = filter_war_chapters(mapped_chapters)
+    peace_collection: Tuple[Tuple[Tuple[int], int]] = filter_peace_chapters(mapped_chapters)
 
     # reduce
     war_scores: Tuple[float] = tuple(calc_score(indices, chap_len) for indices, chap_len in war_collection)
     peace_scores: Tuple[float] = tuple(calc_score(indices, chap_len) for indices, chap_len in peace_collection)
 
     # final result
-    reduced: Tuple[Enum] = tuple(WarOrPeace.WAR if war_score > peace_score else WarOrPeace.PEACE for war_score, peace_score in zip(war_scores, peace_scores))
+    reduced: Tuple[Enum] = eval_result(war_scores, peace_scores)
     
     print_results(reduced)
