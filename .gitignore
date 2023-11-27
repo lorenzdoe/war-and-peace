@@ -3,3 +3,4 @@ playground.py
 out/own_solution.out
 __pycache__
 src/.pytest_cache
+.pytest_cache

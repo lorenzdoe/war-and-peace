@@ -80,7 +80,7 @@ def calc_av_space(indices: Tuple[int]) -> float:
     """
     calculates the average space between words in a chapter
     """
-    return None if len(indices) <= 1 else sum(indices[i+1] - indices[i] for i in range(len(indices)-1)) / (len(indices)-1)
+    return None if len(indices) <= 1 else sum(b - a for a, b in zip(indices[:-1], indices[1:])) / (len(indices)-1)
 
 
 def map_chapter(key_dict: Dict[str, Enum], chapter: List[str], chapter_nr: int, type1, type2) -> Dict[Enum, Tuple[int]]:
@@ -103,10 +103,13 @@ def calc_score(indices: Tuple[int], chap_len: int) -> float:
     """
     returns a tuple with chapter nr. and score for that chapter
     """
+    if chap_len == 0:
+        return 0
+    
     av_space: float = calc_av_space(indices)
     space_score: float = (1 / av_space) if av_space is not None else 0
     density_score: float = len(indices) / chap_len
-    return (space_weight * space_score + density_weight * density_score ) * 100
+    return (space_weight * space_score + density_weight * density_score )
 
 def filter_tokenized_chapters(chapters: Tuple[Dict[Enum, Tuple[int]]], type) -> Tuple[Tuple[Tuple[int], int]]:
     """
